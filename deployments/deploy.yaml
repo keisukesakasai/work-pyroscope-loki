@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyroscope-loki-app
+  labels:
+    app: pyroscope-loki-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pyroscope-loki-app
+  template:
+    metadata:
+      labels:
+        app: pyroscope-loki-app
+    spec:
+      containers:
+        - name: pyroscope-loki-app
+          image:  ghcr.io/keisukesakasai/work-pyroscope-loki:latest
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+          env:  
+            - name: LOG_LEVEL
+              value: "info"
+            - name: APP_VERSION
+              value: "v1.0.0"
+            - name: SERVICE_NAME
+              value: "pyaroscope-loki-app"
+            - name: PYROSCOPE_ENDPOINT_URL
+              value: "http://pyroscope.pyroscope.svc.cluster.local:4040"
+          resources:
+            limits:
+              cpu: 250m
+              memory: 250Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi                
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pyroscope-loki-service
+spec:
+  selector:
+    app: pyroscope-loki-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080              
