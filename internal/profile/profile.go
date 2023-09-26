@@ -2,7 +2,7 @@ package profile
 
 import (
 	"context"
-	"pyroscope-loki-app/internal/log"
+	logging "pyroscope-loki-app/internal/log"
 	"pyroscope-loki-app/internal/utils"
 	"runtime"
 
@@ -15,7 +15,7 @@ const (
 
 func Start(serviceAddress string) {
 	ctx := context.Background()
-	logger := log.GetLoggerFromCtx(ctx)
+	logger := logging.GetLoggerFromCtx(ctx)
 
 	appVersion := utils.GetEnv(utils.AppVersionEnv, "unknown")
 	serviceName := utils.GetEnv(utils.ServiceNameEnv, "unknown")

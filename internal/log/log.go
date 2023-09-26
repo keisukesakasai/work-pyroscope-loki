@@ -1,4 +1,4 @@
-package log
+package logging
 
 import (
 	"context"
@@ -40,6 +40,7 @@ func init() {
 	logLevel := utils.GetEnv(logLevelEnv, "info")
 	appVersion := utils.GetEnv(utils.AppVersionEnv, "unknown")
 	serviceName := utils.GetEnv(utils.ServiceNameEnv, "unknown")
+
 	configure(config{
 		LogLevel:   getZapLogLevelFromEnv(logLevel),
 		AppVersion: appVersion,
@@ -49,11 +50,13 @@ func init() {
 
 func configure(config config) {
 	zapConfig := defaultZapConfig()
+
 	logger, _ := zapConfig.Build()
 	fields := zap.Fields([]zap.Field{
 		zap.String(utils.AppVersionKey, config.AppVersion),
 		zap.String(utils.ServiceNameKey, config.Service),
 	}...)
+
 	localLogger = logger.WithOptions(fields).Sugar()
 }
 
@@ -88,6 +91,15 @@ func WithTrace(ctx context.Context, logger *zap.SugaredLogger) *zap.SugaredLogge
 
 	if spanCtx.HasSpanID() {
 		logger = logger.With(spanKey, spanCtx.SpanID().String())
+	}
+	return logger
+}
+
+func GetLoggerWithTraceID(ctx context.Context) *zap.SugaredLogger {
+	logger := NewLogger()
+	if spanCtx := trace.SpanContextFromContext(ctx); spanCtx.IsValid() {
+		logger = logger.With("trace_id", spanCtx.TraceID().String())
+		logger = logger.With("go_span_id", spanCtx.SpanID().String())
 	}
 	return logger
 }
