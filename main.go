@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"net/http"
+	"os"
 	"pyroscope-loki-app/internal/log"
 	"pyroscope-loki-app/internal/profile"
 
@@ -18,7 +19,10 @@ var logger = log.NewLogger()
 
 func main() {
 
-	profile.Start()
+	// Start Profile
+	if serviceAddress := os.Getenv(profile.PyroscopeEndpointURLEnv); serviceAddress != "" {
+		profile.Start(serviceAddress)
+	}
 
 	e := echo.New()
 

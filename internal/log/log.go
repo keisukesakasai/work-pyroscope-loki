@@ -15,6 +15,12 @@ const (
 	spanKey     = "span_id"
 )
 
+type contextKeyLoggerKey int
+
+const (
+	contextKeyLogger contextKeyLoggerKey = iota
+)
+
 var (
 	logLevel    zapcore.Level
 	localLogger *zap.SugaredLogger
@@ -84,4 +90,17 @@ func WithTrace(ctx context.Context, logger *zap.SugaredLogger) *zap.SugaredLogge
 		logger = logger.With(spanKey, spanCtx.SpanID().String())
 	}
 	return logger
+}
+
+func GetLoggerFromCtx(ctx context.Context) *zap.SugaredLogger {
+	logger, ok := ctx.Value(contextKeyLogger).(*zap.SugaredLogger)
+	if ok {
+		return logger
+	}
+
+	return NewLogger()
+}
+
+func SetLoggerToCtx(ctx context.Context, logger *zap.SugaredLogger) context.Context {
+	return context.WithValue(ctx, contextKeyLogger, logger)
 }

@@ -1,13 +1,22 @@
 package profile
 
 import (
+	"context"
+	"pyroscope-loki-app/internal/log"
 	"pyroscope-loki-app/internal/utils"
 	"runtime"
 
 	"github.com/grafana/pyroscope-go"
 )
 
-func Start() {
+const (
+	PyroscopeEndpointURLEnv = "PYROSCOPE_ENDPOINT_URL"
+)
+
+func Start(serviceAddress string) {
+	ctx := context.Background()
+	logger := log.GetLoggerFromCtx(ctx)
+
 	appVersion := utils.GetEnv(utils.AppVersionEnv, "unknown")
 	serviceName := utils.GetEnv(utils.ServiceNameEnv, "unknown")
 
@@ -30,7 +39,7 @@ func Start() {
 	pyroscope.Start(pyroscope.Config{
 		ApplicationName: serviceName,
 		// Pyroscope のエンドポイントを設定
-		ServerAddress: "http://pyroscope.pyroscope.svc.cluster.local:4040",
+		ServerAddress: serviceAddress,
 		Logger:        pyroscope.StandardLogger,
 
 		// タグを設定することで、タグ指定でのプロファイル表示や、タグ間のプロファイル比較ができ便利です
@@ -57,4 +66,5 @@ func Start() {
 			pyroscope.ProfileBlockDuration,
 		},
 	})
+	logger.Info("Start Profile...")
 }
