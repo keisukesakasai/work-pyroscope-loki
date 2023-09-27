@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/grafana/pyroscope-go v1.0.3
 	github.com/labstack/echo/v4 v4.11.1
+	github.com/pyroscope-io/otel-profiling-go v0.4.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.44.0
 	go.opentelemetry.io/otel v1.18.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.18.0

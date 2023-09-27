@@ -9,9 +9,9 @@ import (
 	logging "pyroscope-loki-app/internal/log"
 	"pyroscope-loki-app/internal/profile"
 	"pyroscope-loki-app/internal/trace"
+	"time"
 
 	"github.com/labstack/echo/v4"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
 )
 
@@ -20,14 +20,9 @@ const (
 	Service = "pyroscope-loki-app"
 )
 
-var logger = logging.NewLogger()
-var tracer = otel.Tracer("echo-server")
+var tracer = otel.GetTracerProvider().Tracer("")
 
 func main() {
-	// Start Profiling
-	if serviceAddress := os.Getenv(profile.PyroscopeEndpointURLEnv); serviceAddress != "" {
-		profile.Start(serviceAddress)
-	}
 
 	// Start Tracing
 	tp, err := trace.InitTracer()
@@ -40,20 +35,38 @@ func main() {
 		}
 	}()
 
+	// Start Profiling
+	if serviceAddress := os.Getenv(profile.PyroscopeEndpointURLEnv); serviceAddress != "" {
+		profile.Start(serviceAddress)
+	}
+
 	r := echo.New()
-	r.Use(otelecho.Middleware("pyroscope-loki-app"))
+	// r.Use(otelecho.Middleware("pyroscope-loki-app"))
+	r.GET("/", okHandler)
 	r.POST("/", echoHandler)
 	r.Start(":8080")
 }
 
+func okHandler(c echo.Context) error {
+	ctx := c.Request().Context()
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "okHandler")
+	defer span.End()
+	logger := logging.GetLoggerWithTraceID(ctx)
+
+	logger.Info("ok!!!!!!!!!!!!!!!!!!!!!!!!!")
+	time.Sleep(1 * time.Second)
+
+	return c.String(http.StatusOK, "ok")
+}
+
 func echoHandler(c echo.Context) error {
+	ctx := c.Request().Context()
+	ctx, span := otel.GetTracerProvider().Tracer("").Start(ctx, "echoHandler")
+	defer span.End()
+	logger := logging.GetLoggerWithTraceID(ctx)
+
 	body := c.Request().Body
 	defer body.Close()
-
-	ctx := c.Request().Context()
-	logger := logging.GetLoggerWithTraceID(ctx)
-	_, span := tracer.Start(ctx, "Handler")
-	defer span.End()
 
 	content, err := io.ReadAll(body)
 	if err != nil {
@@ -61,6 +74,7 @@ func echoHandler(c echo.Context) error {
 	}
 
 	logger.Info(string(content))
+	time.Sleep(1 * time.Second)
 
 	return c.String(http.StatusOK, string(content))
 }

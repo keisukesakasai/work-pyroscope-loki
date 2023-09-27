@@ -1,0 +1,22 @@
+datasources:
+  pyroscope.yaml:
+   apiVersion: 1
+   datasources:
+
+    - name: Pyroscope
+      type: grafana-pyroscope-datasource
+      uid: pyroscope
+      url: http://pyroscope.pyroscope.svc.cluster.local:4040
+
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki.observability.svc.cluster.local:3100
+      editable: true
+      jsonData:
+        derivedFields:
+          - name: 'goProfileExemplar'
+            matcherRegex: '"go_span_id":"(\w+)"'
+            urlLabel: 'goProfileExemplar'
+            url: 'pyroscope-loki-app.cpu{profile_id="$${__value.raw}"}'
+            datasourceUid: pyroscope

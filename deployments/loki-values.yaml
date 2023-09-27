@@ -1,12 +1,15 @@
 promtail:
   enabled: true
+  config:
+    lokiAddress: http://loki:3100/loki/api/v1/push
+    snippets:
+      pipelineStages:
+      - docker: {}
+      - json:
+          expressions:
+            go_span_id: go_span_id
+      - labels:
+          go_span_id:
 
 loki:
   enabled: true
-  datasource:
-    jsonData: |
-      "derivedFields:
-      - name: goProfileExemplar
-        matcherRegex: go_span_id=(\\\\w+)
-        url: ride-sharing-app.cpu{profile_id=\"$$${__value.raw}\"}
-        datasourceUid: pyroscope"
